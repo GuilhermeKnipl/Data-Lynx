@@ -1,3 +1,5 @@
+#include <assert.h>
+#include <time.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -82,24 +84,63 @@ bool check_value(char inpt[]){
 	}
 }
 
-int main(){
+Dtype dtypehandler(char value[]){
 	
-	char numtodbl[] = "121.2";
-	bool is_float = check_value(numtodbl);
+	bool is_float = check_value(value);
 	char* endpointer;
 	
-	strtod(numtodbl, &endpointer);
+	double parsed =strtod(value , &endpointer);
 
 	bool is_num = (*endpointer == '\0');
 	if (is_num && is_float != true) {
-		printf("Input: %s  Is An Integer", numtodbl);
-	
+		printf("\nInput: %s  Is An Integer", value);
+		return INT; 
 	}else if (is_num && is_float) {
-		printf("Is float");
+		printf("\nInput: %f  Is float", parsed);
+		return FLOAT;
 	}else {
-		printf("Is a String");
+		printf("\nInput: %s  Is a String", value);
+		return CHAR;
 	}
 
+}
+
+typedef struct{
+	int* i;
+	char* s;
+	float* f;
+}Test_DtypeHandler;
+
+void test_dtypehandler(){
+
+	srand(time(NULL));
+
+	char *string_test[] = {"asda","223.1gui32", "Dotr","122D1!", "NAN", 
+		"NULL", "#ND", "NA", "nan","Nan", "null","true", "false","NaN"};
+
+	int size = sizeof(string_test) / sizeof(string_test[0]);
+
+	for (int i = 0; i < size; i++){
+		dtypehandler(string_test[i]);	
+		assert(true == true);
+	};
+		
+	for (int it = 0; it < 5; it++){
+		int randomint = rand() % 1000 ;
+		char str[12];
+		sprintf(str, "%d", randomint);
+		assert(INT == dtypehandler(str));
+	}
+
+
+	return ; 
+};
+
+
+int main(){
+	test_dtypehandler();	
+
+	dtypehandler("1102");
 
 
 	printf("\n");
