@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 
 typedef enum{
@@ -36,25 +38,7 @@ void DType(Col a){
 }
 
 
-
-void PDatatype(Col a){
-	switch (a.dtype){
-	case INT:
-		printf("Integer\n");
-		break;
-	case FLOAT:
-		printf("FLOAT\n");
-		break;
-	case CHAR:
-		printf("CHAR\n");
-		break;
-	}
-}
-
-
-
-int main(){
-	
+void file_printer(){
 
 	FILE *file = fopen("debug/Housing.csv", "r");
 
@@ -84,5 +68,40 @@ int main(){
 	}
 
 
+
+}
+
+typedef char *String[] ;
+
+bool check_value(char inpt[]){
+
+	if (strchr(inpt, '.')){
+		return true;
+	}else {
+	 return false;
+	}
+}
+
+int main(){
+	
+	char numtodbl[] = "121.2";
+	bool is_float = check_value(numtodbl);
+	char* endpointer;
+	
+	strtod(numtodbl, &endpointer);
+
+	bool is_num = (*endpointer == '\0');
+	if (is_num && is_float != true) {
+		printf("Input: %s  Is An Integer", numtodbl);
+	
+	}else if (is_num && is_float) {
+		printf("Is float");
+	}else {
+		printf("Is a String");
+	}
+
+
+
+	printf("\n");
 	return 0;
 }
