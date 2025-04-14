@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+static const char *HOUSING_CSV = "databases/Housing.csv";
 
 typedef enum{
 	FLOAT,
@@ -14,11 +15,11 @@ typedef union {
     int* i;
     float* f;
     double* d;
-    char* s;  
+    char** s;  
 } DVector;
 
 typedef struct{
-	char clumn_name;
+	char column_name;
 	int idx;
 	Dtype dtype;
 	DVector vector;
