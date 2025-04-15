@@ -49,22 +49,27 @@ void allocate_vector(int len, Col *column){
 			column->vector.f = (float*)malloc(len*sizeof(float));
 			break;
 		case CHAR:
-			column->vector.s = (char*)malloc(len*sizeof(char));
+			column->vector.s = (char **)malloc(len*sizeof(char*));
+			break;
+		default:
+		 	printf("Not Dtype assigned to it");
 			break;
 	}
-	
 };
 
-int csv_len(const char* filename) {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        perror("Failed to open file");
-        return -1;
-    }
+void inserting_data(int len, Col *column){
+	
+
+};
+
+
+
+int csv_len(FILE * file){
+
 
     int lines = 0;
-    int ch;
-
+    int ch; 
+		
     while ((ch = fgetc(file)) != EOF) {
         if (ch == '\n') {
             lines++;
