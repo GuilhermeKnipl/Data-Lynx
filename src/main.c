@@ -1,117 +1,278 @@
 #include <assert.h>
-//#include <time.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include "../include/types.h"
-#include "../include/unit_test.h"
+// #include <time.h>
 #include "../include/handler.h"
+#include "../include/types.h"
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-
-void check_fhealth(FILE *file){
-	if (file == NULL){
-		printf("EMPTY FILE");
-	}else{
-		printf("\nFile Readed\n");
-	}
+void check_fhealth(FILE *file) {
+  if (file == NULL) {
+    printf("EMPTY FILE");
+  } else {
+    printf("\nFile Readed\n");
+  }
 }
 
-void file_printer(){
+void file_printer() {
 
-	FILE *file = fopen(HOUSING_CSV, "r");
+  FILE *file = fopen(HOUSING_CSV, "r");
 
-	check_fhealth(file);
+  check_fhealth(file);
 
-	char line[256];
+  char line[256];
 
-	int row  = 0;
-	int col = 0;
-	int columns_iter = 0;
-	while (fgets(line, sizeof(line), file)) {
-		row++ ; // Line Index
-		col = 0;
-		columns_iter++ ;
-		printf("--\nNew line--");
-		char* tok = strtok(line,",");
-		while (tok != NULL){
-			//printf("\nrow: %d col: %d value: %s", row , col , tok);
-			tok = strtok(NULL, ",");
-			col++;
-		}
-		if(row == 3){break;}
-	}
+  int row = 0;
+  int col = 0;
+  int columns_iter = 0;
+  while (fgets(line, sizeof(line), file)) {
+    row++; // Line Index
+    col = 0;
+    columns_iter++;
+    printf("--\nNew line--");
+    char *tok = strtok(line, ",");
+    while (tok != NULL) {
+      printf("\nrow: %d col: %d value: %s", row, col, tok);
+      tok = strtok(NULL, ",");
+      col++;
+    }
+    if (row == 3) {
+      break;
+    }
+  }
 }
 
-typedef struct Datetime{
-	int day;
-	int month;
-	int year;
-	int hour;
-	int minutes;
-}Datetime;
+int collen_csv(FILE *file) {
 
-int collen_csv(FILE * file){
+  char lsize[256];
+  int row = 0, colidx = 0;
 
-	char lsize[256];
-	int row = 0, colidx = 0;
+  while (fgets(lsize, sizeof(lsize), file)) {
+    char *tok = strtok(lsize, ",");
+    while (tok != NULL) {
+      tok = strtok(NULL, ",");
+      colidx++;
+    }
+    row++;
+    if (row == 1) {
+      break;
+    };
+  };
+  int colsize = colidx;
 
-	while (fgets(lsize, sizeof(lsize), file)) {
-			char * tok = strtok(lsize,",");
-		while (tok != NULL) {
-			printf("\nColumn index: %d Value: %s\n", colidx,tok);
-			tok = strtok(NULL,",");
-			colidx++;
-		}
-		row++;
-		if(row == 1){break;};
+  printf("\nColumn size at collen_csv: %d\n", colsize);
 
-	    };
-    int colsize = colidx + 1;
-	return colsize;
+  return colsize;
+}
+void llocate_vector(int len, DataFrame *df, int idx) {
+  if (!df->cols[idx].vector) {
+    df->cols[idx].vector = malloc(sizeof(DVector));
+  }
+
+  switch (*df->cols[idx].dtype) {
+  case INT:
+    printf("\nINT");
+    df->cols[idx].vector->i = (int *)malloc(len * sizeof(int));
+    break;
+  case FLOAT:
+    df->cols[idx].vector->f = (float *)malloc(len * sizeof(float));
+    printf("\nFLOAT");
+    break;
+  case CHAR:
+    df->cols[idx].vector->s = (char **)malloc(len * sizeof(char *));
+    printf("\nCHAR");
+    break;
+  default:
+    printf("Invalid dtype on allocation.\n");
+    exit(EXIT_FAILURE);
+  }
 }
 
-void ias(){
+// Assign and Allocate space for the Dtype, Insert the Column name
+void column_constructor(FILE *file, DataFrame *df) {
+  printf("Constructor col");
+  char lsize[256];
 
-	FILE *file = fopen(HOUSING_CSV, "r");
+  int row = 0, colidx = 0;
 
-	if (!file) {
-		perror("Failed to open file");
-    	}
+  while (fgets(lsize, sizeof(lsize), file)) {
+    if (row == 0) {
+        printf("COLUMNS");
+        char *tok = strtok(lsize, ",");
+        while (tok != NULL) {
+            df->cols[colidx].vector = (DVector *)malloc(sizeof(DVector));
+            df->cols[colidx].column_name = strdup(tok);
+            tok = strtok(NULL, ",");
+            colidx++;
+      }
+    }
+    if (row == 1) {
+      colidx = 0;
+      char *tok = strtok(lsize, ",");
+      while (tok != NULL) {
+        printf("Calling llocate_vector with len: %d, colidx: %d\n",
+               *df->rows_len, colidx);
+        printf("-%s", tok);
+        *df->cols[colidx].dtype = dtypehandler(tok);
+        llocate_vector(*df->rows_len, df, colidx);
+        tok = strtok(NULL, ",");
+        colidx++;
+      }
+      row++;
+      if (row == 2) {
+        break;
+      };
+    }
+  }
+}
 
-	int col_len = collen_csv(file);
-	int rows_len = csv_len(file);
+void insert_on(DataFrame *df, int idx, int row, char *value) {
+  printf("%i", *df->cols->dtype);
+  switch (*df->cols[idx].dtype) {
+  case INT:
+    df->cols[idx].vector->i[row] = int_handler(value);
+    break;
+  case FLOAT:
+    df->cols[idx].vector->f[row] = float_handler(value);
+    break;
+  case CHAR:
+    df->cols[idx].vector->s[row] = strdup(value);
+    break;
+  default:
+    EXIT_FAILURE;
+    break;
+  }
+};
 
-	DataFrame * df = (DataFrame*)malloc(sizeof(DataFrame));
-		
-	
-	df->cols = malloc(sizeof(Col)*col_len);
-}	
+DataFrame *dataframe_builder() {
 
-int main(){
+  FILE *file = fopen(HOUSING_CSV, "r");
+
+  int col_len = collen_csv(file);
+  rewind(file);
+  int rows_len = csv_len(file);
+  rewind(file);
+
+  DataFrame *df = (DataFrame *)malloc(sizeof(DataFrame));
+
+  df->cols = (Col *)malloc(sizeof(Col) * col_len);
+
+  df->rows_len = (int *)malloc(sizeof(int));
+
+  *df->rows_len = rows_len;
+
+  column_constructor(file, df);
+
+  char line[256];
+
+  int row = -1;
+  int col = 0;
+  int columns_iter = 0;
+  while (fgets(line, sizeof(line), file)) {
+    row++; // Line Index
+    col = 0;
+    columns_iter++;
+    char *tok = strtok(line, ",");
+    while (tok != NULL) {
+      insert_on(df, col, row, tok);
+      printf("\nrow: %d col: %d value: %s", row, col, tok);
+      tok = strtok(NULL, ",");
+      col++;
+    }
+    // if(row == 3){break;}
+
+    //	fclose(file);
+  }
+  return df;
+}
+
+int main() {
+
+  DataFrame *dft = (DataFrame *)malloc(sizeof(DataFrame));
+
+  FILE *file = fopen(HOUSING_CSV, "r");
+
+  int col_len = collen_csv(file);
+  rewind(file);
+  int rows_len = csv_len(file);
+  rewind(file);
+
+  dft->cols = (Col *)malloc(sizeof(Col) * (col_len));
+  dft->rows_len = (int *)malloc(sizeof(int));
+  *dft->rows_len = rows_len;
+  printf("Rows Len Set: %d\n", *dft->rows_len);
+
+  for (int i = 0; i <= col_len; i++) {
+    dft->cols[i].dtype = (Dtype *)malloc(sizeof(Dtype));
+    dft->cols[i].vector = (DVector *)malloc(sizeof(DVector));
+  }
+  char line[256];
+
+  int rowc = 0, colidx = 0;
+    while (fgets(line, sizeof(line), file)) {
+        if (rowc == 0) {
+            printf("COLUMNS");
+            char *tok = strtok(line, ",");
+            while (tok != NULL) {
+                dft->cols[colidx].vector = (DVector *)malloc(sizeof(DVector));
+                dft->cols[colidx].column_name = strdup(tok);
+                tok = strtok(NULL, ",");
+                colidx++;
+      }
+        }
+          if (rowc == 1) {
+              colidx = 0;
+              char *tok = strtok(line, ",");
+              while (tok != NULL) {
+                printf("Calling llocate_vector with len: %d, colidjx: %d\n",
+                       rows_len, colidx);
+                *dft->cols[colidx].dtype = dtypehandler(tok);
+                tok = strtok(NULL, ",");
+                colidx++;
+              }
+          }
+          rowc++;
+          if (rowc== 2) {
+            break;
+          }        
+  }
+    
+
+  for (int idx; idx <= col_len; idx++) {
+    llocate_vector(rows_len, dft, idx);
+  }
+
+  int row = -1;
+  int col = 0;
+  int columns_iter = 0;
+  while (fgets(line, sizeof(line), file)) {
+    row++; // Line Index
+    col = 0;
+    columns_iter++;
+    char *tok = strtok(line, ",");
+    while (tok != NULL) {
+        if(row != 0){
+          insert_on(dft, col, row, tok);
+          printf("\nrow: %d col: %d value: %s", row, col, tok);}
+      tok = strtok(NULL, ",");
+      col++;
+    }
+  } 
+
+    printf("%s", dft->cols[12].column_name);
+   
+    printf("%s", dft->cols[12].vector->s[543]);
 
 
-//	test_dtypehandler();		
-	
-	DataFrame df;
-	df.cols = (Col*)malloc(sizeof(int)*12);
+  // column_constructor(file, dft);
 
-	char *val = "hello";	
-	Col *b = (Col*)malloc(sizeof(Col));
-	
-	b->dtype = dtypehandler(val);
-	
-		
-        allocate_vector(100, b);	
-	b->idx = 0;
-	b->vector.s[0] = strdup("hello");
-	b->vector.s[1] = strdup("hello2");
+  //	test_dtypehandler();
+  // DataFrame * df = dataframe_builder();
 
-	printf("\nIndex is: %d", b->idx);
-	printf("\nVal %s", b->vector.s[0]);
-	printf("\nVal %s", b->vector.s[1]);
+  // printf("%f",df->cols[0].vector->f[1]);
 
-	file_printer();
-	printf("\n");
-	return 0;
+  // file_printer();
+  printf("\n");
+  return 0;
 }
