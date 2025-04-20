@@ -90,43 +90,6 @@ void llocate_vector(int len, DataFrame *df, int idx) {
 }
 
 // Assign and Allocate space for the Dtype, Insert the Column name
-void column_constructor(FILE *file, DataFrame *df) {
-  printf("Constructor col");
-  char lsize[256];
-
-  int row = 0, colidx = 0;
-
-  while (fgets(lsize, sizeof(lsize), file)) {
-    if (row == 0) {
-        printf("COLUMNS");
-        char *tok = strtok(lsize, ",");
-        while (tok != NULL) {
-            df->cols[colidx].vector = (DVector *)malloc(sizeof(DVector));
-            df->cols[colidx].column_name = strdup(tok);
-            tok = strtok(NULL, ",");
-            colidx++;
-      }
-    }
-    if (row == 1) {
-      colidx = 0;
-      char *tok = strtok(lsize, ",");
-      while (tok != NULL) {
-        printf("Calling llocate_vector with len: %d, colidx: %d\n",
-               *df->rows_len, colidx);
-        printf("-%s", tok);
-        *df->cols[colidx].dtype = dtypehandler(tok);
-        llocate_vector(*df->rows_len, df, colidx);
-        tok = strtok(NULL, ",");
-        colidx++;
-      }
-      row++;
-      if (row == 2) {
-        break;
-      };
-    }
-  }
-}
-
 void insert_on(DataFrame *df, int idx, int row, char *value) {
   printf("%i", *df->cols->dtype);
   switch (*df->cols[idx].dtype) {
@@ -145,53 +108,11 @@ void insert_on(DataFrame *df, int idx, int row, char *value) {
   }
 };
 
-DataFrame *dataframe_builder() {
-
-  FILE *file = fopen(HOUSING_CSV, "r");
-
-  int col_len = collen_csv(file);
-  rewind(file);
-  int rows_len = csv_len(file);
-  rewind(file);
-
-  DataFrame *df = (DataFrame *)malloc(sizeof(DataFrame));
-
-  df->cols = (Col *)malloc(sizeof(Col) * col_len);
-
-  df->rows_len = (int *)malloc(sizeof(int));
-
-  *df->rows_len = rows_len;
-
-  column_constructor(file, df);
-
-  char line[256];
-
-  int row = -1;
-  int col = 0;
-  int columns_iter = 0;
-  while (fgets(line, sizeof(line), file)) {
-    row++; // Line Index
-    col = 0;
-    columns_iter++;
-    char *tok = strtok(line, ",");
-    while (tok != NULL) {
-      insert_on(df, col, row, tok);
-      printf("\nrow: %d col: %d value: %s", row, col, tok);
-      tok = strtok(NULL, ",");
-      col++;
-    }
-    // if(row == 3){break;}
-
-    //	fclose(file);
-  }
-  return df;
-}
-
-int main() {
+DataFrame *dataframe_builder(const char * csv_path) {
 
   DataFrame *dft = (DataFrame *)malloc(sizeof(DataFrame));
 
-  FILE *file = fopen(HOUSING_CSV, "r");
+  FILE *file = fopen(csv_path, "r");
 
   int col_len = collen_csv(file);
   rewind(file);
@@ -200,13 +121,14 @@ int main() {
 
   dft->cols = (Col *)malloc(sizeof(Col) * (col_len));
   dft->rows_len = (int *)malloc(sizeof(int));
-  *dft->rows_len = rows_len;
-  printf("Rows Len Set: %d\n", *dft->rows_len);
+  dft->col_len = (int*)malloc(sizeof(int));
+  //*dft->rows_len = rows_len;
 
   for (int i = 0; i <= col_len; i++) {
     dft->cols[i].dtype = (Dtype *)malloc(sizeof(Dtype));
     dft->cols[i].vector = (DVector *)malloc(sizeof(DVector));
   }
+
   char line[256];
 
   int rowc = 0, colidx = 0;
@@ -225,8 +147,6 @@ int main() {
               colidx = 0;
               char *tok = strtok(line, ",");
               while (tok != NULL) {
-                printf("Calling llocate_vector with len: %d, colidjx: %d\n",
-                       rows_len, colidx);
                 *dft->cols[colidx].dtype = dtypehandler(tok);
                 tok = strtok(NULL, ",");
                 colidx++;
@@ -239,7 +159,10 @@ int main() {
   }
     
 
-  for (int idx; idx <= col_len; idx++) {
+  *dft->rows_len = rows_len;
+  *dft->col_len = col_len;
+
+  for (int idx = 0; idx < col_len; idx++) {
     llocate_vector(rows_len, dft, idx);
   }
 
@@ -260,9 +183,19 @@ int main() {
     }
   } 
 
+
+    return dft;
+}
+
+
+int main() {
+    
+   DataFrame * dft = dataframe_builder(HOUSING_CSV);
+        
     printf("%s", dft->cols[12].column_name);
-   
     printf("%s", dft->cols[12].vector->s[543]);
+    printf("%d", *dft->rows_len);
+    printf("%d", *dft->col_len);
 
 
   // column_constructor(file, dft);
