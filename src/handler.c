@@ -15,7 +15,7 @@ bool check_value(char inpt[]){
 
 
 Dtype dtypehandler(char value[]){
-	
+
 	bool is_float = check_value(value);
 	char* endpointer;
 	
@@ -35,34 +35,43 @@ Dtype dtypehandler(char value[]){
 
 }
 
+int int_handler(char* value) {
+	char* endpointer;
+	int parsed = (int)strtol(value , &endpointer, 10);
+	return parsed;
+}
+float float_handler(char* value) {
+	char* endpointer;
+	float parsed = strtof(value, &endpointer);
+	return parsed;
+}
+
 
 //Identifying Dtype of cols
 void identify_dtype();
 
 // Allocating Space according to Datatype;
-void allocate_vector(int len, Col *column){  
-	switch(column->dtype){
-		case INT:
-			column->vector.i = (int*)malloc(len*sizeof(int));
+void allocate_vector(int len, DataFrame * df, int idx){  
+    if (!df->cols[idx].vector) {
+        df->cols[idx].vector = malloc(sizeof(DVector));
+    }
+
+    printf("\n%d", len);
+	switch(*df->cols[idx].dtype){
+        case INT:
+			df->cols[idx].vector->i = (int*)malloc(len * sizeof(int));
 			break;
 		case FLOAT:
-			column->vector.f = (float*)malloc(len*sizeof(float));
+			df->cols[idx].vector->f = (float*)malloc(len * sizeof(float));
 			break;
 		case CHAR:
-			column->vector.s = (char **)malloc(len*sizeof(char*));
+			df->cols[idx].vector->s = (char **)malloc(len * sizeof(char*));
 			break;
 		default:
-		 	printf("Not Dtype assigned to it");
-			break;
+            printf("Invalid dtype on allocation.\n");
+            exit(EXIT_FAILURE);
 	}
-};
-
-void inserting_data(int len, Col *column){
-	
-
-};
-
-
+}
 
 int csv_len(FILE * file){
 
@@ -75,59 +84,6 @@ int csv_len(FILE * file){
             lines++;
         }
     }
-    fclose(file);
+    printf("Row count at csv_len: %d \n", lines);
     return lines;
 }
-/*
-int main(){
-	Col *a = (Col*)malloc(sizeof(Col));
-	Col *b = (Col*)malloc(sizeof(Col));
-	Col *c = (Col*)malloc(sizeof(Col));
-	
-	char *filepath = "debug/Housing.csv";
-
-	int len_csv = csv_len(filepath);
-
-	printf("\n=--%d", len_csv);
-	
-	//a->idx = (int*)malloc(sizeof(int));
-	int len = 2;
-	a->dtype = INT;
-	b->dtype = INT;
-	c->dtype = CHAR;
-
-	allocate_vector(len_csv, a);
-	allocate_vector(len_csv, b);
-	allocate_vector(len_csv, c);
-
-		
-
-	*b->vector.i = 44;
-	*a->vector.i = 10;
-	strcpy(c->vector.s, "Hello");
-	a->idx = 0;
-	b->idx = 1;
-	c->idx = 2;
-
-	DataFrame df;
-	df.cols = (Col*)malloc(3* sizeof(Col));
-	df.cols[0] = *a;
-	df.cols[1] = *b;
-	df.cols[2] = *c;
-
-	for(int i = 0; i < 3; i++){
-		if (i!=2){
-			printf("\nidx = %d",df.cols[i].idx);
-			printf("\nvalue = %d", *df.cols[i].vector.i);
-		}else{
-			printf("\nidx = %d",df.cols[i].idx);
-			printf("\nvalue = %s\n", df.cols[i].vector.s);
-	}
-	}
-	Col d;
-	d.dtype = INT;
-	
-	//DType(d);
-	return 1;
-}
-*/
