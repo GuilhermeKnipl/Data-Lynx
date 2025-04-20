@@ -28,6 +28,7 @@ typedef struct{
 typedef struct DataFrame{
 	Col* cols;	
 	int * rows_len;
+    int * col_len;
 }DataFrame ;
 
 typedef struct Datetime{
